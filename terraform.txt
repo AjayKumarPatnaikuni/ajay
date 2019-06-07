@@ -1,0 +1,51 @@
+Ref: https://www.terraform.io/intro/index.html
+
+-------------------TERRAFORM-----------------------
+Terraform is a tool for building, changing and versioning infrastructures safely and efficiently. Terraform can manage existing and popular service providers as well as custom in-house solutions.
+The infrastructure terraform can manage includes lowlevel components such as compute instances, storage and networking as well as high level componants such as DNS entries SAAS features etc.
+
+Key features: Infra as a code, executing plans, resource graph and change automation.
+
+Creating ec2-instance by using access key and secret accesskey:
+
+Step1: create a dierectory. Ex: mkdir terraform-ajay && cd terraform-ajay
+
+Step2: create ec2-instance.tf file. Here ext “tf” resembles terraform and we need to save files with ext “.tf” . 
+
+provider "aws" {
+  access_key = "ACCESS_ID"
+  secret_key = "Seceret_Access_ID"
+  region     = "us-east-2"
+}
+
+resource "aws_instance" "demo" {
+  ami           = "ami-02bcbb802e03574ba"
+  instance_type = "t2.micro"
+  tags {
+    Name = “demo”
+    Batch = “10AM”
+  }
+}
+
+Ref: https://www.terraform.io/docs/providers/aws/r/instance.html
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+access_key = "AKIAJ4MXWTKIAYB3UNSQ"
+  secret_key = "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"
+pCMJs8P5oWQ/xyZ42Py4ERhMQRJd6fUsH6P596hu
