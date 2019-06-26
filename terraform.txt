@@ -10,7 +10,7 @@ Creating ec2-instance by using access key and secret accesskey:
 
 Step1: create a dierectory. Ex: mkdir terraform-ajay && cd terraform-ajay
 
-Step2: create ec2-instance.tf file. Here ext ìtfî resembles terraform and we need to save files with ext ì.tfî . 
+Step2: create ec2-instance.tf file. Here ext ‚Äútf‚Äù resembles terraform and we need to save files with ext ‚Äú.tf‚Äù . 
 
 provider "aws" {
   access_key = "ACCESS_ID"
@@ -22,8 +22,8 @@ resource "aws_instance" "demo" {
   ami           = "ami-02bcbb802e03574ba"
   instance_type = "t2.micro"
   tags {
-    Name = ìdemoî
-    Batch = ì10AMî
+    Name = ‚Äúdemo‚Äù
+    Batch = ‚Äú10AM‚Äù
   }
 }
 
@@ -46,6 +46,4 @@ Ref: https://www.terraform.io/docs/providers/aws/r/instance.html
 
 
 
-access_key = "AKIAJ4MXWTKIAYB3UNSQ"
-  secret_key = "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"
-pCMJs8P5oWQ/xyZ42Py4ERhMQRJd6fUsH6P596hu
+
