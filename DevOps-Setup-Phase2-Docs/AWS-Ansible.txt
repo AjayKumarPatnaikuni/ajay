@@ -1,0 +1,249 @@
+Reference: https://www.youtube.com/watch?v=DZ84onseKek
+
+Once connected to redhat server, login to root user : sudo -i
+
+hostname RedhatServer (run this command from root user)
+
+vi /etc/hostname = remove the first line and update to "RedhatServer"
+
+logout from root & ec2 user. and login again.
+
+[ec2-user@RedhatServer ~]$ --> you will see the host name as "RedhatServer".
+
+1. from root user: sudo -i
+
+	rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
+2. yum install -y ansible
+
+	[root@RedhatServer ~]# ansible --version
+	ansible 2.4.2.0
+	config file = /etc/ansible/ansible.cfg
+	configured module search path = [u'/root/.ansible/plugins/modules', u'/usrre/ansible/plugins/modules']
+	ansible python module location = /usr/lib/python2.7/site-packages/ansible
+	executable location = /bin/ansible
+	python version = 2.7.5 (default, May  3 2017, 07:55:04) [GCC 4.8.5 2015062ed Hat 4.8.5-14)]
+
+  
+3. Ansible installed at = /etc/ansible
+
+	ls /etc/ansible/ or ll /etc/ansible/
+
+	ansible.cfg hosts roles
+
+4. ssh-keygen -t rsa
+
+	Public key generated at --> cat /root/.ssh/id_rsa.pub
+
+	Keep open this file and copy the key. ( this needs to be pasted in client server location)
+
+5. Connect to cleint & login to root.
+
+	sudo -i
+
+	hostname client (from root user)
+
+	vi /etc/hostname = update to client
+
+	logout from root & ec2 user. and login again.
+
+	[ec2-user@client ~]$
+
+6.  6.1. login to root: sudo -i
+
+	6.2. vi /root/.ssh/authorized_keys
+
+		paste the key which is copied from server and save the file.
+
+	6.3. Update the host name from HOSTNAME=localhost.localdomain to HOSTNAME=client in the file vi /etc/sysconfig/network
+	
+	logout from ec2, root user and login again and then login to root user.
+
+	6.4. vi /etc/ssh/sshd_config : uncomment the line "PermitRootLogin yes".
+
+		/etc/init.d/sshd restart
+
+	6.5. add the cient host IP details in the file vi /etc/hosts (add as a new line)
+
+	18.219.241.116 cleint
+
+	6.6. ping client
+
+7. Go to the RedhatServer 
+
+	7.1. root user --> vi /etc/hosts --> 18.219.241.116 cleint (repeat the 6.5).
+
+	7.2. login to client from RedhatServer : ssh client (if successfully logged in to client, then logout and try ansible)
+
+8. Ansible: Install somethiong on client machine from the server.
+
+	8.1. Add hosts details(add below two lines) in the ansible hosts file : cd /etc/ansible/hosts
+
+		[amazonweb]
+		client
+
+	8.2. ansible client -m ping or ansible amazonweb -m ping or ansible all -m ping
+
+		client | SUCCESS => {
+			"changed": false,
+			"ping": "pong"
+		}
+
+	8.3. create a folder "playbooks" and cd playbooks.
+	
+	vi ansi_playbook.yml : create yml file and add below snippet.
+
+- hosts: amazonweb
+  tasks:
+   - name: install tree
+     yum: name=tree update_cache=yes state=latest
+
+	8.4. ansible-playbook ansi_playbook.yml.
+	
+		PLAY [amazonweb] ***************************************************************
+
+		TASK [Gathering Facts] *********************************************************
+		ok: [client]
+
+		TASK [install tree] ************************************************************
+		changed: [client]
+
+		PLAY RECAP *********************************************************************
+		client                     : ok=2    changed=1    unreachable=0    failed=0
+
+======================================================================================================
+
+Scenario-1: Download an artifact from Nexus and depoy on TomCat.
+
+---
+- hosts: amazonweb
+  vars:
+  - warName: jenkins.war
+  - warRemotePath: /etc/wars/
+
+  tasks:
+  - name: Download WAR to server
+    get_url:
+      url: http://13.59.32.120:8081/nexus/content/repositories/releases/com/devops/webapp/WebApp/1.0.0-2/WebApp-1.0.0-2.war
+      dest: /etc/wars/
+
+  - name: Deploy WAR file
+    command: mv /etc/wars/WebApp-1.0.0-2.war /var/lib/tomcat7/webapps/
+		
+======================================================================================================
+		
+Scenario-2: Call one yml file from other yml file. 
+
+---
+- import_playbook: other_file.yml
+
+Note: 'include' for playbook includes. You should use 'import_playbook' instead. This feature will be removed in
+version 2.8.
+======================================================================================================
+
+Scenario-3: install tree
+---
+- hosts: amazonweb
+  tasks:
+	- name: install tree
+	  yum: name=tree update_cache=yes state=latest
+======================================================================================================
+
+Scenario-4: copy the file from Redhat machine to cleint, and install the apache pakage.
+
+- hosts: amazonweb
+  tasks:
+    - name: install httpd
+      yum: name=httpd state=installed
+    - name: copy index.html
+      copy: src=files/index.html dest=/var/www/html/index.html
+    - name: start apache
+      service:
+       name: httpd
+       state: restarted
+
+Once the above palybook run successfully, launch only the IP address of the cleint machine: http://13.58.52.250, it will run index.html file.
+======================================================================================================
+- hosts: ec2-13-59-32-120.us-east-2.compute.amazonaws.com
+  tasks:
+    - name: install httpd
+      action: yum name=httpd state=installed
+    - name: copy index.html
+      copy: src=files/index.html dest=/var/www/html/index.html
+    - name: start apache
+      service:
+       name: httpd
+       state: restarted
+
+	   ansible-playbook ansi_playbook2.yml
+	   ansible-playbook -v ansi_playbook2.yml
+	   ansible-playbook -v ansi_playbook2.yml --step
+	   
+	   -v = verbore for detailed execution status.
+	   --step = y/n/c (interacting with user to get the approval on next task execution.)
+Output:
+[root@RedhatServer playbooks]# ansible-playbook ansi_playbook2.yml
+
+PLAY [amazonweb] *******************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************************************************************************
+ok: [client]
+
+TASK [install httpd] ***************************************************************************************************************************************************************************
+ok: [client]
+
+TASK [copy index.html] *************************************************************************************************************************************************************************
+changed: [client]
+
+TASK [start apache] ****************************************************************************************************************************************************************************
+changed: [client]
+
+PLAY RECAP *************************************************************************************************************************************************************************************
+client                     : ok=4    changed=2    unreachable=0    failed=0
+
+======================================================================================================
+Scenario-5: Deploy the package the to tomcat using ansible playbook
+
+- hosts: MyClient
+
+  tasks:
+  - name: Deploy WAR file
+    copy: src=/root/.jenkins/workspace/FreeStyleJob-Deploy-Playbook/target/WebApp-1.war dest=/root/tomcat7/webapps/
+======================================================================================================
+Scenario-6: Deploy the package the to tomcat using ansible playbook by passing the Jenkins variables
+
+- hosts: MyClient
+
+  tasks:
+  - name: Deploy WAR file
+    copy: src={{WORKSPACE}}/target/WebApp-{{releaseVersion}}.war dest=/root/tomcat7/webapps/
+
+Configure extra vars in adanced section as key & value format.
+
+or Command: ansible-playbook --extra-vars '{"WORKSPACE":"${WORKSPACE}", "releaseVersion":"${releaseVersion}" }' /etc/ansible/playbooks/warDeployWithVariables.yml
+======================================================================================================
+
+Install apache(httpd) in the client server from Main server where ansible installed:
+
+http://13.59.32.120/
+
+1. Redhat main server: vi /etc/hosts  --- 13.59.32.120 nexus
+
+2. copy the key from Redhat main server "cat /root/.ssh/id_rsa.pub" TO cleint server "vi /root/.ssh/authorized_keys"
+
+3. Update the IP details in the file /etc/ansible/hosts as below.
+
+	[nexus]
+	nexus
+
+- hosts: nexus
+  tasks:
+    - name: install httpd
+      action: yum name=httpd state=installed
+    - name: copy index.html
+      copy: src=files/index.html dest=/var/www/html/index.html
+    - name: start apache
+      service:
+       name: httpd
+       state: restarted
+======================================================================================================

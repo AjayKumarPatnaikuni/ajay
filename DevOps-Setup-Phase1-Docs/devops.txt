@@ -1,0 +1,19 @@
+
+
+DevOps = Devlopment Operations
+
+Activities in Devlopment: 
+
+	Analysis/planning/requirement: JIRA/Confluence
+	Code management - GitHub
+	Build - Jenkins - CI, CD, Code Quality check (junit, sonar, checkstyle, jaoco)
+	
+			CI - Continuous Integration : Auto trigger the jenkins job for every check-in
+	deploy
+	test - selenium
+	release
+	
+Activities in Operations: AWS, Ansible, Docker
+	
+	Testing in different env - load test, auto scaling etc
+	Monitoring
